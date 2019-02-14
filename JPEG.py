@@ -64,30 +64,64 @@ def step3_SubSample(debugFlag, yCbCrChannels, sampleOverX: int, sampleOverY: int
     print("Step 3 Subsample")
     height = yCbCrChannels.shape[0]
     width = yCbCrChannels.shape[1]
-    channelY = yCbCrChannels[:, :, 0]  # The Y Array of the Picture
-    channelCb = np.zeros([int(height / sampleOverY), int(width / sampleOverX)])
-    channelCr = np.zeros([int(height / sampleOverY), int(width / sampleOverX)])
-    for x in range(0, width, sampleOverX):
-        for y in range(0, height, sampleOverY):
-            channelCb[int(y / sampleOverY), int(x / sampleOverX)] = arithmeticMean(yCbCrChannels, x, y, 1, sampleOverX,
-                                                                                   sampleOverY)
-            channelCr[int(y / sampleOverY), int(x / sampleOverX)] = arithmeticMean(yCbCrChannels, x, y, 2, sampleOverX,
-                                                                                   sampleOverY)
-    if debugFlag:
-        plt.imshow(channelY)
-        plt.xlabel('For Y AFTER')
-        plt.set_cmap('gray')
-        plt.show()
+    result = None
+    found = False
+    # 4 Different Modes for Sub-Sample
+    if sampleOverX == 1 and sampleOverY == 1:
+        result = Subsampling_TYPE_4_1_1(yCbCrChannels, height, width)
+        found = True
+    if sampleOverX == 2 and sampleOverY == 0:
+        result = Subsampling_TYPE_4_2_0(yCbCrChannels, height, width)
+        found = True
+    if sampleOverX == 2 and sampleOverY == 2:
+        result = Subsampling_TYPE_4_2_2(yCbCrChannels, height, width)
+        found = True
+    if sampleOverX == 4 and sampleOverY == 4:
+        result = Subsampling_TYPE_4_4_4(yCbCrChannels, height, width)
+        found = True
+    if found:
+        result = [yCbCrChannels[:, :, 0], result[:, :, 1], result[:, :, 2]]
+        if debugFlag:
+            plt.imshow(result[0])
+            plt.xlabel('ReverseSubsampling For Y')
+            plt.set_cmap('gray')
+            plt.show()
 
-        plt.imshow(channelCb)
-        plt.xlabel('For Cb')
-        plt.set_cmap('gray')
-        plt.show()
+            plt.imshow(result[1])
+            plt.xlabel('ReverseSubsampling For Cb')
+            plt.set_cmap('gray')
+            plt.show()
 
-        plt.imshow(channelCr)
-        plt.xlabel('For Cr')
-        plt.set_cmap('gray')
-        plt.show()
+            plt.imshow(result[2])
+            plt.xlabel('ReverseSubsampling For Cr')
+            plt.set_cmap('gray')
+            plt.show()
+        return result
+    else:
+        raise ValueError("Wrong sample type")
+    # channelCb = np.zeros([int(height / sampleOverY), int(width / sampleOverX)])
+    # channelCr = np.zeros([int(height / sampleOverY), int(width / sampleOverX)])
+    # for x in range(0, width, sampleOverX):
+    #     for y in range(0, height, sampleOverY):
+    #         channelCb[int(y / sampleOverY), int(x / sampleOverX)] = arithmeticMean(yCbCrChannels, x, y, 1, sampleOverX,
+    #                                                                                sampleOverY)
+    #         channelCr[int(y / sampleOverY), int(x / sampleOverX)] = arithmeticMean(yCbCrChannels, x, y, 2, sampleOverX,
+    #                                                                                sampleOverY)
+    # if debugFlag:
+    #     plt.imshow(channelY)
+    #     plt.xlabel('For Y AFTER')
+    #     plt.set_cmap('gray')
+    #     plt.show()
+    #
+    #     plt.imshow(channelCb)
+    #     plt.xlabel('For Cb')
+    #     plt.set_cmap('gray')
+    #     plt.show()
+    #
+    #     plt.imshow(channelCr)
+    #     plt.xlabel('For Cr')
+    #     plt.set_cmap('gray')
+    #     plt.show()
     return [channelY, channelCb, channelCr]
 
 
@@ -99,6 +133,21 @@ def step4_DCTAllChannels(debugFlag, yCbCrChannels):
     print("  DCT Channel Cb")
     dctCr = ChannelDCT(yCbCrChannels[2])
     print("  DCT Channel Cr")
+    if debugFlag:
+        plt.imshow(dctY)
+        plt.xlabel('For Y AFTER')
+        plt.set_cmap('gray')
+        plt.show()
+
+        plt.imshow(dctCb)
+        plt.xlabel('For Cb')
+        plt.set_cmap('gray')
+        plt.show()
+
+        plt.imshow(dctCr)
+        plt.xlabel('For Cr')
+        plt.set_cmap('gray')
+        plt.show()
     return [dctY, dctCb, dctCr]
 
 
@@ -123,6 +172,21 @@ def step6_ZickZack(debugFlag, yCbCrChannels):
     zickZackY = ChannelZickZack(yCbCrChannels[0])
     zickZackCb = ChannelZickZack(yCbCrChannels[1])
     zickZackCr = ChannelZickZack(yCbCrChannels[2])
+    # if debugFlag:
+    #     plt.imshow(zickZackY)
+    #     plt.xlabel('For Y AFTER')
+    #     plt.set_cmap('gray')
+    #     plt.show()
+    #
+    #     plt.imshow(zickZackCb)
+    #     plt.xlabel('For Cb')
+    #     plt.set_cmap('gray')
+    #     plt.show()
+    #
+    #     plt.imshow(zickZackCr)
+    #     plt.xlabel('For Cr')
+    #     plt.set_cmap('gray')
+    #     plt.show()
     return [zickZackY, zickZackCb, zickZackCr]
 
 
@@ -168,13 +232,13 @@ def step10_LengthDecode(debugFlag, yCbCrChannels, blockCount):
     return [runlengthDecode_Y, runlengthDecode_Cb, runlengthDecode_Cr]
 
 
-def step11_InverseZickZack(debugFlag, yCbCrChannels, width, height):
+def step11_InverseZickZack(debugFlag, yCbCrChannels, width, height, sampledSize):
     print("Step 11 Inverse ZickZack")
     zickZackY = ChannelInverseZickZack(yCbCrChannels[0], width, height)
     print("  Inversed Channel Y")
-    zickZackCb = ChannelInverseZickZack(yCbCrChannels[1], int(width / 2), int(height / 2))
+    zickZackCb = ChannelInverseZickZack(yCbCrChannels[1], sampledSize[0], sampledSize[1])
     print("  Inversed Channel Cb")
-    zickZackCr = ChannelInverseZickZack(yCbCrChannels[2], int(width / 2), int(height / 2))
+    zickZackCr = ChannelInverseZickZack(yCbCrChannels[2], sampledSize[0], sampledSize[1])
     print("  Inversed Channel Cr")
     return [zickZackY, zickZackCb, zickZackCr]
 
@@ -203,14 +267,28 @@ def step14_Idct(debugFlag, yCbCrChannels):
     idctY = ChannelIdct(yCbCrChannels[0], "layerY")
     idctCb = ChannelIdct(yCbCrChannels[1], "layerCb")
     idctCr = ChannelIdct(yCbCrChannels[2], "layerCr")
+    if debugFlag:
+        plt.imshow(idctY)
+        plt.xlabel('For Y AFTER')
+        plt.set_cmap('gray')
+        plt.show()
+
+        plt.imshow(idctCb)
+        plt.xlabel('For Cb')
+        plt.set_cmap('gray')
+        plt.show()
+
+        plt.imshow(idctCr)
+        plt.xlabel('For Cr')
+        plt.set_cmap('gray')
+        plt.show()
     return [idctY, idctCb, idctCr]
 
 
 def step15_ReverseSubsampling(debugFlag, yCbCrChannels, sampleOverX, sampleOverY):
     print("Step 15 Reverse Subsampling")
-
     result = np.zeros((len(yCbCrChannels[0]), len(yCbCrChannels[0][0]), 3))
-    result[:, :, 0] = yCbCrChannels[0]
+    result[:, :, 0] = np.asarray(yCbCrChannels[0])
     found = False
     if sampleOverX == 1 and sampleOverY == 1:
         ReverseSubsampling_TYPE_4_1_1(yCbCrChannels, result)
@@ -255,11 +333,11 @@ def step16_ConvertYCbCrToRGB(debugFlag, yCbCrChannels, RGBMatrix, yPbPrMatrix):
     for x in range(width):
         for y in range(height):
             # convert YCbCr to a single vector for calculating
-            yCbCrVector = [[yCbCrChannels[x, y, 0]], [yCbCrChannels[x, y, 1]], [yCbCrChannels[x, y, 2]]]
+            yCbCrVector = np.asarray([[yCbCrChannels[x, y, 0]], [yCbCrChannels[x, y, 1]], [yCbCrChannels[x, y, 2]]])
             yPbPr = minus(yCbCrVector, yPbPrMatrix)
             rgb = mult(RGBMatrix, yPbPr)
             # map and set RGB value from vector
-            rgbPicture[x][y][0] = mapit(rgb[0][0])/255.
-            rgbPicture[x][y][1] = mapit(rgb[1][0])/255.
-            rgbPicture[x][y][2] = mapit(rgb[2][0])/255.
+            rgbPicture[x][y][0] = mapit(rgb[0][0]) / 255.
+            rgbPicture[x][y][1] = mapit(rgb[1][0]) / 255.
+            rgbPicture[x][y][2] = mapit(rgb[2][0]) / 255.
     return rgbPicture

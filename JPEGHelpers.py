@@ -8,7 +8,7 @@ def arithmeticMean(arr, x, y, z, offsetX, offsetY):
     mean = 0
     for i in range(x, x + offsetX):
         for j in range(y, y + offsetY):
-            mean += arr[j][i][z]
+            mean += arr[j, i, z]
     return mean / (offsetX * offsetY)
 
 
@@ -16,19 +16,20 @@ def ChannelDCT(channelArray):
     height = channelArray.shape[0]
     width = channelArray.shape[1]
 
-    n1 = math.sqrt(1.0 / const.BlockSize)
-    n2 = math.sqrt(2.0 / const.BlockSize)
+
 
     result = np.zeros((height, width))
     print(result.shape)
     # Call the DCT Function FOR EACH block
     for y_block in range(0, height, const.BlockSize):
         for x_block in range(0, width, const.BlockSize):
-            BlockDCT(channelArray, y_block, x_block, result, n1, n2)
+            BlockDCT(channelArray, y_block, x_block, result)
     return result
 
 
-def BlockDCT(channelArray, y_block, x_block, result, n1, n2):
+def BlockDCT(channelArray, y_block, x_block, result):
+    n1 = math.sqrt(1.0 / const.BlockSize)
+    n2 = math.sqrt(2.0 / const.BlockSize)
     for y in range(y_block, y_block + const.BlockSize):
         Cy = n2
         if y == y_block:
@@ -50,13 +51,12 @@ def BlockDCT(channelArray, y_block, x_block, result, n1, n2):
 def ChannelDifferentialEncoding(channelArray):
     height = channelArray.shape[0]
     width = channelArray.shape[1]
-
     result = np.copy(channelArray)
     for y_block in range(0, height, const.BlockSize):
         difference = 0
         for x_block in range(0, width, const.BlockSize):
-            new_difference = result[y_block][x_block]
-            result[y_block][x_block] -= difference
+            new_difference = result[y_block, x_block]
+            result[y_block, x_block] -= difference
             difference = new_difference
     return result
 
@@ -65,18 +65,14 @@ def BlockZickZack(channelArray, y_block, x_block, offsetForBlock, zickZackIndexA
     for x in range(0, const.BlockSize):
         for y in range(0, const.BlockSize):
             indexInBlock = zickZackIndexArray[x][y] - 1
-            result[offsetForBlock + indexInBlock] = channelArray[x_block + x][y_block + y]
+            result[offsetForBlock + indexInBlock] = channelArray[x_block + x, y_block + y]
 
 
 def ChannelZickZack(channelArray):
-    height = channelArray.shape[0]
-    width = channelArray.shape[1]
-
-    # print(channelArray.shape)
-
+    height = channelArray.shape[1]
+    width = channelArray.shape[0]
     zickZackIndexArray = const.ZickZackMappingForBlocksize(const.BlockSize)
     result = np.zeros([width * height])
-
     offsetForBlock = 0
     # for each block of image
     for y_block in range(0, height, const.BlockSize):
@@ -89,7 +85,6 @@ def ChannelZickZack(channelArray):
 def ChannelInverseZickZack(channelArray, width, height):
     # zickZackIndexArray = const.ReverseZickZackMappingForBlocksize()
     result = np.zeros([width, height])
-    print(len(channelArray))
     offset = 0
     for y_block in range(0, height, const.BlockSize):
         for x_block in range(0, width, const.BlockSize):
@@ -104,6 +99,11 @@ def BlockInverseZickZack(channelArray, offsetInArr, y_block, x_block, result):
         x_offset = ReverseZickZackMapping[i][0]
         y_offset = ReverseZickZackMapping[i][1]
         result[x_block + x_offset, y_block + y_offset] = channelArray[offsetInArr + i]
+    # ReverseZickZackMapping = const.ReverseZickZackMappingForBlocksize()
+    # for i in range(0, const.BlockSize * const.BlockSize):
+    #     x_offset = ReverseZickZackMapping[i, 0]
+    #     y_offset = ReverseZickZackMapping[i, 1]
+    #     result[y_block + y_offset, x_block + x_offset] = channelArray[offsetInArr + i]
 
 
 def ChannelLengthEncode(channelArray):
@@ -194,8 +194,8 @@ def ChannelInverseDifferentialEncoding(channelArray):
     for y_block in range(0, height, const.BlockSize):
         PrevioudD = 0
         for x_block in range(0, width, const.BlockSize):
-            result[y_block][x_block] += PrevioudD
-            PrevioudD = result[y_block][x_block]
+            result[y_block, x_block] += PrevioudD
+            PrevioudD = result[y_block, x_block]
     return result
 
 
@@ -206,7 +206,7 @@ def ChannelQuantization(channelArray, quantMatrix, fileName):
     result = np.zeros((height, width))
     for x in range(width):
         for y in range(height):
-            result[y, x] = int(round(channelArray[y, x] / float(quantMatrix[int(y % n)][int(x % n)])))
+            result[y, x] = int(round(channelArray[y, x] / float(quantMatrix[int(y % n), int(x % n)])))
     np.savetxt(fileName + "_quantization.txt", result, delimiter=" ", fmt="%s")
     return result
 
@@ -218,7 +218,7 @@ def ChannelDequantization(channelArray, quantMatrix, fileName):
     result = np.zeros((height, width))
     for x in range(width):
         for y in range(height):
-            result[y, x] = channelArray[y][x] * quantMatrix[int(y % n)][int(x % n)]
+            result[y, x] = channelArray[y, x] * quantMatrix[int(y % n), int(x % n)]
     np.savetxt(fileName + "_dequantization.txt", result, delimiter=" ", fmt="%s")
     return result
 
@@ -253,36 +253,84 @@ def BlockIdct(channelArray, y_block, x_block, result, n1, n2):
             result[x, y] = sum
 
 
+def Subsampling_TYPE_4_1_1(yCbCrChannels, height, width):
+    # Keep one Axis and shrink the other by shrinking 4 Pixels to 1
+    result = np.zeros([height, int(width / 4), 3])
+    for x in range(0, width, 4):
+        for y in range(0, height, 1):
+            result[y, int(x / 4), 1] = arithmeticMean(yCbCrChannels, x, y, 1, 4, 1)
+            result[y, int(x / 4), 2] = arithmeticMean(yCbCrChannels, x, y, 2, 4, 1)
+    return result
+
+
+def Subsampling_TYPE_4_2_0(yCbCrChannels, height, width):
+    # Shrink 4 Neighbouring Pixels to one single Pixel
+    result = np.zeros([int(height / 2), int(width / 2), 3])
+    for x in range(0, width, 2):
+        for y in range(0, height, 2):
+            result[int(y / 2), int(x / 2), 1] = arithmeticMean(yCbCrChannels, x, y, 1, 2, 2)
+            result[int(y / 2), int(x / 2), 2] = arithmeticMean(yCbCrChannels, x, y, 2, 2, 2)
+    return result
+
+
+def Subsampling_TYPE_4_2_2(yCbCrChannels, height: int, width: int):
+    # Keep one Axis and shrink the other by shrinking 2 Pixels to 1
+    result = np.zeros([int(height), int(width / 2), 3])
+    for x in range(0, width, 2):
+        for y in range(0, height, 1):
+            result[y, int(x / 2), 1] = arithmeticMean(yCbCrChannels, x, y, 1, 2, 1)
+            result[y, int(x / 2), 2] = arithmeticMean(yCbCrChannels, x, y, 2, 2, 1)
+    return result
+
+
+def Subsampling_TYPE_4_4_4(yCbCrChannels, height, width):
+    # Do not do any Sub-Sample at all
+    # THIS CODE DOES NOTHING PRACTICALLY^^
+    result = np.zeros([height, width, 3])
+    for x in range(width):
+        for y in range(height):
+            result[x, y, 1] = yCbCrChannels[x, y, 1]
+            result[x, y, 2] = yCbCrChannels[x, y, 2]
+    return result
+
+
 def ReverseSubsampling_TYPE_4_1_1(yCbCrChannels, result):
-    for x in range(len(yCbCrChannels[1])):
-        for y in range(len(yCbCrChannels[1][0])):
+    # Expand the Pixels by duplicating them
+    for x in range(yCbCrChannels[1].shape[1]):
+        for y in range(yCbCrChannels[1].shape[0]):
             for i in range(4):
-                result[y][4 * x + i][1] = yCbCrChannels[1][y][x]
-                result[y][4 * x + i][2] = yCbCrChannels[2][y][x]
+                result[4 * x + i, y, 1] = yCbCrChannels[1][y, x]
+                result[4 * x + i, y, 2] = yCbCrChannels[2][y, x]
 
 
 def ReverseSubsampling_TYPE_4_2_0(yCbCrChannels, result):
-    for x in range(len(yCbCrChannels[1])):
-        for y in range(len(yCbCrChannels[1][0])):
+    # Expand the Pixels by duplicating them
+    for x in range(yCbCrChannels[1].shape[1]):
+        for y in range(yCbCrChannels[1].shape[0]):
             for i in range(2):
                 for j in range(2):
-                    result[2 * y + i][2 * x + j][1] = yCbCrChannels[1][y][x]
-                    result[2 * y + i][2 * x + j][2] = yCbCrChannels[2][y][x]
+                    result[2 * y + i, 2 * x + j, 1] = yCbCrChannels[1][y, x]
+                    result[2 * y + i, 2 * x + j, 2] = yCbCrChannels[2][y, x]
 
 
 def ReverseSubsampling_TYPE_4_2_2(yCbCrChannels, result):
-    for x in range(len(yCbCrChannels[1])):
-        for y in range(len(yCbCrChannels[1][0])):
+    # Expand the Pixels by duplicating them
+    for x in range(yCbCrChannels[1].shape[1]):
+        for y in range(yCbCrChannels[1].shape[0]):
             for i in range(2):
-                result[y][2 * x + i][1] = yCbCrChannels[1][y][x]
-                result[y][2 * x + i][2] = yCbCrChannels[2][y][x]
+                print(result.shape)
+                print(yCbCrChannels[1].shape)
+                print(yCbCrChannels[2].shape)
+                result[y, 2 * x + i, 1] = yCbCrChannels[1][y, x]
+                result[y, 2 * x + i, 2] = yCbCrChannels[2][y, x]
 
 
 def ReverseSubsampling_TYPE_4_4_4(yCbCrChannels, result):
-    for x in range(len(yCbCrChannels[1])):
-        for y in range(len(yCbCrChannels[1][0])):
-            result[y][x][1] = yCbCrChannels[1][y][x]
-            result[y][x][2] = yCbCrChannels[2][y][x]
+    # Expand the Pixels by duplicating them
+    for x in range(yCbCrChannels[1].shape[1]):
+        for y in range(yCbCrChannels[1].shape[0]):
+            result[y, x, 1] = yCbCrChannels[1][y, x]
+            result[y, x, 2] = yCbCrChannels[2][y, x]
 
 
 def mapit(val):
@@ -297,7 +345,7 @@ def minus(a, b):
     result = np.zeros((len(a), len(b[0])))
     for i in range(len(a)):
         for j in range(len(b[0])):
-            result[i][j] = a[i][j] - b[i][j]
+            result[i, j] = a[i, j] - b[i, j]
     return result
 
 
@@ -306,5 +354,5 @@ def mult(a, b):
     for i in range(len(a)):
         for j in range(len(b[0])):
             for k in range(len(a[0])):
-                result[i][j] = result[i][j] + a[i][k] * b[k][j]
+                result[i, j] = result[i, j] + a[i, k] * b[k, j]
     return result

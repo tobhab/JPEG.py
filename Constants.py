@@ -1,22 +1,24 @@
+import numpy as np
+
 # STATIC STUFF
 BlockSize = 8
 BlockLength = BlockSize**2
 EndOfBlockMarker = -1
 LongZeroRunMarker = 17
 
-MultiplicationMatrixYCbCr = [
+MultiplicationMatrixYCbCr = np.asarray([
     [0.299, 0.587, 0.114],
     [-0.168736, -0.331264, 0.5],
     [0.5, -0.418688, -0.081312]
-]
+])
 
-AdditionMatrixYCbCr = [
+AdditionMatrixYCbCr =np.asarray( [
     [0.0],
     [128.0],
     [128.0]
-]
+])
 
-ZickZackMappingForBlockSize8 = [
+ZickZackMappingForBlockSize8 =np.asarray( [
     [1, 2, 6, 7, 15, 16, 28, 29],
     [3, 5, 8, 14, 17, 27, 30, 43],
     [4, 9, 13, 18, 26, 31, 42, 44],
@@ -24,9 +26,9 @@ ZickZackMappingForBlockSize8 = [
     [11, 20, 24, 33, 40, 46, 53, 55],
     [21, 23, 34, 39, 47, 52, 56, 61],
     [22, 35, 38, 48, 51, 57, 60, 62],
-    [36, 37, 49, 50, 58, 59, 63, 64]]
+    [36, 37, 49, 50, 58, 59, 63, 64]])
 
-ReverseZickZackMappingForBlockSize8 = [
+ReverseZickZackMappingForBlockSize8 = np.asarray( [
     [0, 0], [0, 1], [1, 0], [2, 0], [1, 1], [0, 2], [0, 3], [1, 2],
     [2, 1], [3, 0], [4, 0], [3, 1], [2, 2], [1, 3], [0, 4], [0, 5],
     [1, 4], [2, 3], [3, 2], [4, 1], [5, 0], [6, 0], [5, 1], [4, 2],
@@ -34,61 +36,61 @@ ReverseZickZackMappingForBlockSize8 = [
     [4, 3], [5, 2], [6, 1], [7, 0], [7, 1], [6, 2], [5, 3], [4, 4],
     [3, 5], [2, 6], [1, 7], [2, 7], [3, 6], [4, 5], [5, 4], [6, 3],
     [7, 2], [7, 3], [6, 4], [5, 5], [4, 6], [3, 7], [4, 7], [5, 6],
-    [6, 5], [7, 4], [7, 5], [6, 6], [5, 7], [6, 7], [7, 6], [7, 7]]
+    [6, 5], [7, 4], [7, 5], [6, 6], [5, 7], [6, 7], [7, 6], [7, 7]])
 
 
 def ZickZackMappingForBlocksize(blockSize):
-    indexArray = "empty"
+    indexArray = None
     if blockSize == 8:
         indexArray = ZickZackMappingForBlockSize8
     # Add new Mappings for Blocksizes here!
     # if blockSize = ?:
     #     indexArray = consts.ZickZackMappingForBlocksize?
-    if indexArray == "empty":
+    if indexArray is None:
         raise Exception("No Index Array for given Blocksize")
     return indexArray
 
 
 def ReverseZickZackMappingForBlocksize():
-    indexArray = "empty"
+    indexArray = None
     if BlockSize == 8:
         indexArray = ReverseZickZackMappingForBlockSize8
     # Add new Mappings for Blocksizes here!
     # if BlockSize = ?:
     #     indexArray = consts.ZickZackMappingForBlocksize?
-    if indexArray == "empty":
+    if indexArray is None:
         raise Exception("No Index Array for given Blocksize")
     return indexArray
 
 
 # The data for the publically defined tables, as specified in ITU T.81
 # JPEG specification section K3.3 and used in the IJG library.
-StdDCLuminanceLengths = [
+StdDCLuminanceLengths = np.asarray( [
     0x00, 0x01, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01,
     0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-]
+])
 
-StdDCLuminanceValues = [
+StdDCLuminanceValues = np.asarray([
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
     0x08, 0x09, 0x0a, 0x0b,
-]
+])
 
-StdDCChrominanceLengths = [
+StdDCChrominanceLengths =np.asarray( [
     0x00, 0x03, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
     0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
-]
+])
 
-StdDCChrominanceValues = [
+StdDCChrominanceValues =np.asarray( [
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
     0x08, 0x09, 0x0a, 0x0b,
-]
+])
 
-StdACLuminanceLengths = [
+StdACLuminanceLengths = np.asarray([
     0x00, 0x02, 0x01, 0x03, 0x03, 0x02, 0x04, 0x03,
     0x05, 0x05, 0x04, 0x04, 0x00, 0x00, 0x01, 0x7d,
-]
+])
 
-StdACLuminanceValues = [
+StdACLuminanceValues =np.asarray( [
     0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12,
     0x21, 0x31, 0x41, 0x06, 0x13, 0x51, 0x61, 0x07,
     0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xa1, 0x08,
@@ -110,14 +112,14 @@ StdACLuminanceValues = [
     0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea,
     0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
     0xf9, 0xfa,
-]
+])
 
-StdACChrominanceLengths = [
+StdACChrominanceLengths =np.asarray( [
     0x00, 0x02, 0x01, 0x02, 0x04, 0x04, 0x03, 0x04,
     0x07, 0x05, 0x04, 0x04, 0x00, 0x01, 0x02, 0x77,
-]
+])
 
-StdACChrominanceValues = [
+StdACChrominanceValues = np.asarray([
     0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21,
     0x31, 0x06, 0x12, 0x41, 0x51, 0x07, 0x61, 0x71,
     0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91,
@@ -139,9 +141,9 @@ StdACChrominanceValues = [
     0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9,
     0xea, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
     0xf9, 0xfa,
-]
+])
 
-Q20 = [
+Q20 =np.asarray( [
     [3, 5, 7, 9, 11, 13, 15, 17],
     [5, 7, 9, 11, 13, 15, 17, 19],
     [7, 9, 11, 13, 15, 17, 19, 21],
@@ -150,9 +152,9 @@ Q20 = [
     [13, 15, 17, 19, 21, 23, 25, 27],
     [15, 17, 19, 21, 23, 25, 27, 29],
     [17, 19, 21, 23, 25, 27, 29, 31]
-]
+])
 
-Q50 = [
+Q50 = np.asarray( [
     [16, 11, 10, 16, 24, 40, 51, 61],
     [12, 12, 14, 19, 26, 58, 60, 55],
     [14, 13, 16, 24, 40, 57, 69, 56],
@@ -161,9 +163,9 @@ Q50 = [
     [24, 35, 55, 64, 81, 104, 113, 92],
     [49, 64, 78, 87, 103, 121, 120, 101],
     [72, 92, 95, 98, 112, 100, 103, 99]
-]
+])
 
-Q70 = [
+Q70 =np.asarray( [
     [10, 15, 25, 37, 51, 66, 82, 100],
     [15, 19, 28, 39, 52, 67, 83, 101],
     [25, 28, 35, 45, 58, 72, 88, 105],
@@ -172,9 +174,9 @@ Q70 = [
     [66, 67, 72, 79, 89, 101, 114, 130],
     [82, 83, 88, 94, 103, 114, 127, 142],
     [100, 101, 105, 111, 119, 130, 142, 156]
-]
+])
 
-Q100 = [
+Q100 = np.asarray([
     [17, 18, 24, 47, 99, 99, 99, 99],
     [18, 21, 26, 66, 99, 99, 99, 99],
     [24, 26, 56, 99, 99, 99, 99, 99],
@@ -183,9 +185,9 @@ Q100 = [
     [99, 99, 99, 99, 99, 99, 99, 99],
     [99, 99, 99, 99, 99, 99, 99, 99],
     [99, 99, 99, 99, 99, 99, 99, 99]
-]
+])
 
-Q255 = [
+Q255 = np.asarray( [
     [80, 60, 50, 80, 120, 200, 255, 255],
     [55, 60, 70, 95, 130, 255, 255, 255],
     [70, 65, 80, 120, 200, 255, 255, 255],
@@ -194,16 +196,16 @@ Q255 = [
     [120, 175, 255, 255, 255, 255, 255, 255],
     [245, 255, 255, 255, 255, 255, 255, 255],
     [255, 255, 255, 255, 255, 255, 255, 255]
-]
+])
 
-RGBMatrix1 = [
+RGBMatrix1 = np.asarray([
     [1.0, 0, 1.402],
     [1.0, -0.344136, -0.714136],
     [1.0, 1.772, 0]
-]
+])
 
-YCbCrMatrix = [
+YCbCrMatrix = np.asarray( [
     [0.0],
     [128.0],
     [128.0]
-]
+])
