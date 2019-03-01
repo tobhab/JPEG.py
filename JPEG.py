@@ -6,6 +6,7 @@ from HuffmanDecoding import HuffmanDecoding
 from HuffmanEncoding import HuffmanEncoding
 from JPEGHelpers import *
 import HuffmanTree
+from joblib import Parallel, delayed
 
 
 def step1_LoadImage(debugFlag, imagePath):
@@ -43,19 +44,15 @@ def step2_ConvertRGBToYCbCr(debugFlag, rgbChannels):
             yCbCrPicture[x, y, 1] = ycbcr[1, 0]  # Cb
             yCbCrPicture[x, y, 2] = ycbcr[2, 0]  # Cr
     if debugFlag:
-        plt.imshow(yCbCrPicture[:, :, 0])
-        plt.xlabel('For Y')
-        plt.set_cmap('gray')
-        plt.show()
 
-        plt.imshow(yCbCrPicture[:, :, 1])
-        plt.xlabel('For Cb')
+        f, axarr = plt.subplots(1, 3)
         plt.set_cmap('gray')
-        plt.show()
-
-        plt.imshow(yCbCrPicture[:, :, 2])
-        plt.xlabel('For Cr')
-        plt.set_cmap('gray')
+        axarr[0].imshow(yCbCrPicture[:, :, 0])
+        axarr[0].set_title('For Y')
+        axarr[1].imshow(yCbCrPicture[:, :, 1])
+        axarr[1].set_title('For Cb')
+        axarr[2].imshow(yCbCrPicture[:, :, 2])
+        axarr[2].set_title('For Cr')
         plt.show()
     return yCbCrPicture
 
@@ -82,19 +79,14 @@ def step3_SubSample(debugFlag, yCbCrChannels, sampleOverX: int, sampleOverY: int
     if found:
         result = [yCbCrChannels[:, :, 0], result[:, :, 1], result[:, :, 2]]
         if debugFlag:
-            plt.imshow(result[0])
-            plt.xlabel('ReverseSubsampling For Y')
+            f, axarr = plt.subplots(1, 3)
             plt.set_cmap('gray')
-            plt.show()
-
-            plt.imshow(result[1])
-            plt.xlabel('ReverseSubsampling For Cb')
-            plt.set_cmap('gray')
-            plt.show()
-
-            plt.imshow(result[2])
-            plt.xlabel('ReverseSubsampling For Cr')
-            plt.set_cmap('gray')
+            axarr[0].imshow(result[0])
+            axarr[0].set_title('For Y')
+            axarr[1].imshow(result[1])
+            axarr[1].set_title('For Cb')
+            axarr[2].imshow(result[2])
+            axarr[2].set_title('For Cr')
             plt.show()
         return result
     else:
@@ -127,26 +119,22 @@ def step3_SubSample(debugFlag, yCbCrChannels, sampleOverX: int, sampleOverY: int
 
 def step4_DCTAllChannels(debugFlag, yCbCrChannels):
     print("Step 4 DCT Channels")
-    dctY = ChannelDCT(yCbCrChannels[0])
-    print("  DCT Channel Y")
-    dctCb = ChannelDCT(yCbCrChannels[1])
-    print("  DCT Channel Cb")
-    dctCr = ChannelDCT(yCbCrChannels[2])
-    print("  DCT Channel Cr")
+    dctY, dctCb, dctCr = Parallel(n_jobs=3)(delayed(ChannelDCT)(yCbCrChannels[i]) for i in range(3))
+    # dctY = ChannelDCT(yCbCrChannels[0])
+    # print("  DCT Channel Y")
+    # dctCb = ChannelDCT(yCbCrChannels[1])
+    # print("  DCT Channel Cb")
+    # dctCr = ChannelDCT(yCbCrChannels[2])
+    # print("  DCT Channel Cr")
     if debugFlag:
-        plt.imshow(dctY)
-        plt.xlabel('For Y AFTER')
+        f, axarr = plt.subplots(1, 3)
         plt.set_cmap('gray')
-        plt.show()
-
-        plt.imshow(dctCb)
-        plt.xlabel('For Cb')
-        plt.set_cmap('gray')
-        plt.show()
-
-        plt.imshow(dctCr)
-        plt.xlabel('For Cr')
-        plt.set_cmap('gray')
+        axarr[0].imshow(dctY)
+        axarr[0].set_title('For Y')
+        axarr[1].imshow(dctCb)
+        axarr[1].set_title('For Cb')
+        axarr[2].imshow(dctCr)
+        axarr[2].set_title('For Cr')
         plt.show()
     return [dctY, dctCb, dctCr]
 
@@ -156,6 +144,16 @@ def step5_Quantization(debugFlag, yCbCrChannels):
     quantY = ChannelQuantization(yCbCrChannels[0], const.Q50, "layerY")
     quantCb = ChannelQuantization(yCbCrChannels[1], const.Q50, "layerCb")
     quantCr = ChannelQuantization(yCbCrChannels[2], const.Q50, "layerCr")
+    if debugFlag:
+        f, axarr = plt.subplots(1, 3)
+        plt.set_cmap('gray')
+        axarr[0].imshow(quantY)
+        axarr[0].set_title('For Y')
+        axarr[1].imshow(quantCb)
+        axarr[1].set_title('For Cb')
+        axarr[2].imshow(quantCr)
+        axarr[2].set_title('For Cr')
+        plt.show()
     return [quantY, quantCb, quantCr]
 
 
@@ -164,6 +162,16 @@ def step5_DifferentalEncoding(debugFlag, yCbCrChannels):
     dfY = ChannelDifferentialEncoding(yCbCrChannels[0])
     dfCb = ChannelDifferentialEncoding(yCbCrChannels[1])
     dfCr = ChannelDifferentialEncoding(yCbCrChannels[2])
+    if debugFlag:
+        f, axarr = plt.subplots(1, 3)
+        plt.set_cmap('gray')
+        axarr[0].imshow(dfY)
+        axarr[0].set_title('For Y')
+        axarr[1].imshow(dfCb)
+        axarr[1].set_title('For Cb')
+        axarr[2].imshow(dfCr)
+        axarr[2].set_title('For Cr')
+        plt.show()
     return [dfY, dfCb, dfCr]
 
 
@@ -172,21 +180,16 @@ def step6_ZickZack(debugFlag, yCbCrChannels):
     zickZackY = ChannelZickZack(yCbCrChannels[0])
     zickZackCb = ChannelZickZack(yCbCrChannels[1])
     zickZackCr = ChannelZickZack(yCbCrChannels[2])
-    # if debugFlag:
-    #     plt.imshow(zickZackY)
-    #     plt.xlabel('For Y AFTER')
-    #     plt.set_cmap('gray')
-    #     plt.show()
-    #
-    #     plt.imshow(zickZackCb)
-    #     plt.xlabel('For Cb')
-    #     plt.set_cmap('gray')
-    #     plt.show()
-    #
-    #     plt.imshow(zickZackCr)
-    #     plt.xlabel('For Cr')
-    #     plt.set_cmap('gray')
-    #     plt.show()
+    if debugFlag:
+        f, axarr = plt.subplots(1, 3)
+        plt.set_cmap('gray')
+        axarr[0].hist(zickZackY)
+        axarr[0].set_title('For Y')
+        axarr[1].hist(zickZackCb)
+        axarr[1].set_title('For Cb')
+        axarr[2].hist(zickZackCr)
+        axarr[2].set_title('For Cr')
+        plt.show()
     return [zickZackY, zickZackCb, zickZackCr]
 
 
@@ -264,9 +267,11 @@ def step13_Dequantization(debugFlag, yCbCrChannels):
 
 def step14_Idct(debugFlag, yCbCrChannels):
     print("Step 14 Idct")
-    idctY = ChannelIdct(yCbCrChannels[0], "layerY")
-    idctCb = ChannelIdct(yCbCrChannels[1], "layerCb")
-    idctCr = ChannelIdct(yCbCrChannels[2], "layerCr")
+    labels = ["layerY", "layerCb", "layerCr"]
+    idctY, idctCb, idctCr = Parallel(n_jobs=3)(delayed(ChannelIdct)(yCbCrChannels[i], labels[i]) for i in range(3))
+    # idctY = ChannelIdct(yCbCrChannels[0], "layerY")
+    # idctCb = ChannelIdct(yCbCrChannels[1], "layerCb")
+    # idctCr = ChannelIdct(yCbCrChannels[2], "layerCr")
     if debugFlag:
         plt.imshow(idctY)
         plt.xlabel('For Y AFTER')

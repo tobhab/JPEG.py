@@ -4,21 +4,21 @@ from PIL import Image
 import Constants as consts
 from JPEG import *
 
-sampling = [1, 1]
+sampling = [2, 0]
 # sampling = [2, 2]
 # sampling = [4, 4]
 # sampling = [2, 0]
 
-RGB_image = step1_LoadImage(debugFlag=0, imagePath='RGB.png')
+RGB_image = step1_LoadImage(debugFlag=0, imagePath='RGB2.png')
 image_width, image_height = RGB_image.shape[0], RGB_image.shape[1]
 blockCount = (image_width / consts.BlockSize) * (image_height / consts.BlockSize)
-yCbCr_image = step2_ConvertRGBToYCbCr(debugFlag=0, rgbChannels=RGB_image)
-sampled_yCbCr_image = step3_SubSample(debugFlag=0, yCbCrChannels=yCbCr_image, sampleOverX=sampling[0], sampleOverY=sampling[1])
+yCbCr_image = step2_ConvertRGBToYCbCr(debugFlag=1, rgbChannels=RGB_image)
+sampled_yCbCr_image = step3_SubSample(debugFlag=1, yCbCrChannels=yCbCr_image, sampleOverX=sampling[0], sampleOverY=sampling[1])
 sampled_size = sampled_yCbCr_image[1].shape
-dct_yCbCr_image = step4_DCTAllChannels(debugFlag=0, yCbCrChannels=sampled_yCbCr_image)
-quantization_yCbCr_image = step5_Quantization(debugFlag=0, yCbCrChannels=dct_yCbCr_image)
-differental_yCbCr_image = step5_DifferentalEncoding(debugFlag=0, yCbCrChannels=quantization_yCbCr_image)
-zickzack_yCbCr_image = step6_ZickZack(debugFlag=0, yCbCrChannels=differental_yCbCr_image)
+dct_yCbCr_image = step4_DCTAllChannels(debugFlag=1, yCbCrChannels=sampled_yCbCr_image)
+quantization_yCbCr_image = step5_Quantization(debugFlag=1, yCbCrChannels=dct_yCbCr_image)
+differental_yCbCr_image = step5_DifferentalEncoding(debugFlag=1, yCbCrChannels=quantization_yCbCr_image)
+zickzack_yCbCr_image = step6_ZickZack(debugFlag=1, yCbCrChannels=differental_yCbCr_image)
 # length_encode_yCbCr_image = step7_LengthEncode(debugFlag=0, yCbCrChannels=zickzack_yCbCr_image)
 # huffman_encode_yCbCr_image = step8_HuffmanEncode(debugFlag=0, yCbCrChannels=length_encode_yCbCr_image, zicks=zickzack_yCbCr_image)
 #

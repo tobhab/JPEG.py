@@ -15,9 +15,6 @@ def arithmeticMean(arr, x, y, z, offsetX, offsetY):
 def ChannelDCT(channelArray):
     height = channelArray.shape[0]
     width = channelArray.shape[1]
-
-
-
     result = np.zeros((height, width))
     print(result.shape)
     # Call the DCT Function FOR EACH block

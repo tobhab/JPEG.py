@@ -102,3 +102,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+layerCb_dequantization.txt
+layerCb_idct.txt
+layerCb_quantization.txt
+layerCr_dequantization.txt
+layerCr_idct.txt
+layerCr_quantization.txt
+layerY_dequantization.txt
+layerY_idct.txt
+layerY_quantization.txt
+*.txt
